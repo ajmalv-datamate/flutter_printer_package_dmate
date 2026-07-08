@@ -1,0 +1,45 @@
+group 'com.dmate.printer_package'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.3.0'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        flatDir {
+            dirs 'libs', 'D:/Ajmal/BMHBILLING/app/libs'
+        }
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 33
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'D:/Ajmal/BMHBILLING/app/libs', include: ['*.jar', '*.aar'])
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.sunmi:printerlibrary:1.0.18'
+    implementation 'io.github.jeremyliao:live-event-bus-x:1.8.0'
+}

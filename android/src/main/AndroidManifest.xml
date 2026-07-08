@@ -1,0 +1,19 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.dmate.printer_package">
+
+    <queries>
+        <package android:name="com.incar.printerservice" />
+        <package android:name="com.neo.printer.sdk" />
+        <intent>
+            <action android:name="com.neo.printer.sdk.core.ApiAdapterManager.NeoPrinterService" />
+        </intent>
+    </queries>
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+</manifest>
