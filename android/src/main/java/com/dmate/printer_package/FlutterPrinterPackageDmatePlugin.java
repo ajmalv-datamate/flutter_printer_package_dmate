@@ -305,8 +305,8 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
                 protected void onConnected(SunmiPrinterService service) {
                     try {
                         service.printBitmap(bitmap, null);
-                        service.lineFeed(3, null);
-                        service.cutPaper(0, 0, null);
+                        service.printText("\n\n\n", null);
+                        service.cutPaper(null);
                         InnerPrinterManager.getInstance().unBindService(activity, this);
                         new Handler(Looper.getMainLooper()).post(() -> result.success(true));
                     } catch (Exception e) {

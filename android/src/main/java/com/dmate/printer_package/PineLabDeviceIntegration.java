@@ -29,7 +29,8 @@ public class PineLabDeviceIntegration {
     String paymentAmount;
     String appId;
 
-    public PineLabDeviceIntegration(Context context, String transactionType, String paymentAmount, String appId, Bitmap bitmap, PineLabDeviceResponse pineLabDeviceResponse) {
+    public PineLabDeviceIntegration(Context context, String transactionType, String paymentAmount, String appId,
+            Bitmap bitmap, PineLabDeviceResponse pineLabDeviceResponse) {
         this.context = context;
         this.pineLabDeviceResponse = pineLabDeviceResponse;
         this.transactionType = transactionType;
@@ -41,7 +42,7 @@ public class PineLabDeviceIntegration {
     private static final String BILLING_REQUEST_TAG = "MASTERAPPREQUEST";
     private static final String BILLING_RESPONSE_TAG = "MASTERAPPRESPONSE";
 
-    public void initialise(Context context){
+    public void initialise(Context context) {
         String PLUTUS_SMART_ACTION = "com.pinelabs.masterapp.SERVER";
         String PLUTUS_SMART_PACKAGE = "com.pinelabs.masterapp";
         Intent intent = new Intent();
@@ -61,13 +62,16 @@ public class PineLabDeviceIntegration {
                 JSONObject Header = new JSONObject();
                 JSONObject Detail = new JSONObject();
 
-                Header.put("ApplicationId", appId != null ? appId : "");
+                String defaultAppId = "ca64099cf0a74e68af6aa4c9159283e5";
+                String finalAppId = (appId == null || appId.trim().isEmpty()) ? defaultAppId : appId;
+                Header.put("ApplicationId", finalAppId);
+                Toast.makeText(context, "PineLab ID Sent: " + finalAppId, Toast.LENGTH_LONG).show();
                 Header.put("UserId", "dsoft");
                 Header.put("VersionNo", "1.0");
                 Detail.put("PrintRefNo", "123446779");
                 Detail.put("SavePrintData", true);
 
-                if (transactionType.equalsIgnoreCase("payment")){
+                if (transactionType.equalsIgnoreCase("payment")) {
                     Header.put("MethodId", "1001");
                     Detail.put("TransactionType", "4001"); // Default to Card payment
                     Detail.put("BillingRefNo", generateTransactionId());

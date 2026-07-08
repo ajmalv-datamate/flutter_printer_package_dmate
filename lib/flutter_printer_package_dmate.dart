@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/services';
+import 'package:flutter/services.dart';
 
 class FlutterPrinterPackageDmate {
   static const MethodChannel _channel = MethodChannel('flutter_printer_package_dmate');
