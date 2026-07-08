@@ -61,8 +61,10 @@ public class PineLabDeviceIntegration {
                 JSONObject object = new JSONObject();
                 JSONObject Header = new JSONObject();
                 JSONObject Detail = new JSONObject();
-
                 String defaultAppId = "ca64099cf0a74e68af6aa4c9159283e5";
+                if (context.getPackageName().equalsIgnoreCase("com.hotsoft.coffeeshop")) {
+                    defaultAppId = "386e4aa24d324023b77efe76f607f0bb";
+                }
                 String finalAppId = (appId == null || appId.trim().isEmpty()) ? defaultAppId : appId;
                 Header.put("ApplicationId", finalAppId);
                 Toast.makeText(context, "PineLab ID Sent: " + finalAppId, Toast.LENGTH_LONG).show();
