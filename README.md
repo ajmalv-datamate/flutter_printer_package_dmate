@@ -18,17 +18,7 @@ This plugin bridges the native Android SDKs for each manufacturer and offers for
 ## Android Setup & Requirements
 
 ### Native Dependency Resolution
-To avoid duplicating large SDK binaries (`.jar` and `.aar` files), the plugin compiles directly against the library files of the sibling project:
-`D:/Ajmal/BMHBILLING/app/libs`
-
-If your workspace path differs, you can update the repository flat directory inside `android/build.gradle`:
-```groovy
-repositories {
-    flatDir {
-        dirs 'libs', 'D:/Ajmal/BMHBILLING/app/libs'
-    }
-}
-```
+All required SDK binaries (`.jar` and `.aar` files) are packaged locally inside the plugin's android/libs folder. There are no absolute sibling dependencies, making it plug-and-play when imported into any project or compiled on different systems.
 
 ### Permissions
 Ensure the following permissions are configured in your application's `AndroidManifest.xml`:
@@ -65,14 +55,36 @@ for (var printer in bluetoothPrinters) {
 ```
 
 ### 2. Print Receipt
-Use the `printReceipt` function, passing the target model, connection type, path (e.g. bluetooth MAC address), and receipt data:
+Use the `printReceipt` function, passing the target model, connection type, path (e.g. bluetooth MAC address), and receipt data.
+
+You can print in **two different modes**:
+- **Structured Template Mode**: Pass key-value pairs (e.g., `"clientname"`, `"cartItems"`) and the package will layout the receipt automatically.
+- **Raw Text Mode (Recommended for Existing App Migrations)**: Pass `"rawText"` containing your pre-formatted receipt string. The package will bypass template generation and print your monospaced text exactly as is. On bitmap-based printers (PineLab, Sunmi, Epson, TVS), the package will auto-render the raw text into a high-quality monospaced bitmap before printing.
 
 ```dart
 import 'package:flutter_printer_package_dmate/flutter_printer_package_dmate.dart';
 
 void startPrintingJob() async {
-  // 1. Prepare receipt fields
-  Map<String, dynamic> receiptData = {
+  // Option A: Raw Text Mode (Prints pre-formatted strings directly)
+  Map<String, dynamic> rawReceiptData = {
+    "rawText": """
+    ================================
+             CORNER CAFE
+             Ground Floor
+    ================================
+    Bill No: Bill-9988
+    Date:    08/07/2026 11:45 AM
+    --------------------------------
+    Cafe Latte         2x     200.00
+    Butter Croissant   1x      80.00
+    --------------------------------
+    Total Payable:            280.00
+    ================================
+    """
+  };
+
+  // Option B: Structured Template Mode (Auto-formatted by plugin layout engine)
+  Map<String, dynamic> structuredReceiptData = {
     "clientname": "Corner Cafe",
     "locationName": "Ground Floor",
     "locationName1": "Sector-3, Bypass Road",
@@ -108,25 +120,47 @@ void startPrintingJob() async {
     ]
   };
 
-  // 2. Trigger the print job
+  // Trigger the print job (using Raw Text Mode as an example)
   bool isSuccess = await FlutterPrinterPackageDmate.printReceipt(
     deviceModel: "BPOS",       // Choose from: TVS, BPOS, POSIQ, IMIN, PINE_LAB, TSUNMI, EPSON
     connectionType: "USB",     // "USB" or "BLUETOOTH"
     connectionPath: "",        // Optional MAC address or USB device target
-    printerData: receiptData,
+    printerData: rawReceiptData,
     options: {
       "paperWidth": 576,       // 576 pixels (for 80mm paper) or 384 pixels (for 58mm paper)
-      "pineLabAppId": "your_plutus_app_id_here" // Mandatory for PINE_LAB prints
+      "pineLabAppId": "your_plutus_app_id_here" // Optional. If left blank, uses coffeeshop defaults.
     }
   );
 
   if (isSuccess) {
     print("Receipt printed successfully!");
   } else {
-    print("Print operation failed or cancelled.");
+    print("Print operation failed.");
   }
 }
 ```
+
+---
+
+## 3. PineLab App ID & Security Registration
+
+PineLab terminal services strictly validate the identity of the calling application. For prints to go through, the calling application's **Package Name** and its **Keystore Signature SHA-256 fingerprint** must be registered on the PineLab Developer Console.
+
+### Coffeeshop Default Fallbacks
+If no `"pineLabAppId"` is provided in the `options` parameter, the plugin automatically detects your app's package name and falls back to these default coffeeshop keys:
+- **Package Name**: `com.hotsoft.coffeeshop` (Dev) -> **App ID**: `386e4aa24d324023b77efe76f607f0bb`
+- **Package Name**: `com.hotsoft.coffeeshopprod` (Prod) -> **App ID**: `ca64099cf0a74e68af6aa4c9159283e5`
+
+### Using in Other Applications
+To use this package in other projects with different package names:
+1. Register your new package name (e.g. `com.example.myapp`) with PineLab.
+2. Obtain your custom **Application ID** from the PineLab portal.
+3. Pass your custom ID dynamically in the print call:
+   ```dart
+   options: {
+     "pineLabAppId": "your-new-custom-id-from-pinelab"
+   }
+   ```
 
 ---
 

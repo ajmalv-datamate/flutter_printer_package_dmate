@@ -17,7 +17,7 @@ allprojects {
         google()
         mavenCentral()
         flatDir {
-            dirs 'libs', 'D:/Ajmal/BMHBILLING/app/libs'
+            dirs 'libs'
         }
     }
 }
@@ -39,8 +39,8 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'D:/Ajmal/BMHBILLING/app/libs', include: ['*.jar', '*.aar'], exclude: ['zxingcore.jar', 'printer-lib-2.2.4.aar'])
-    compileOnly files('D:/Ajmal/BMHBILLING/app/libs/printer-lib-2.2.4.aar')
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'], exclude: ['zxingcore.jar', 'printer-lib-2.2.4.aar'])
+    compileOnly files('libs/printer-lib-2.2.4.aar')
     implementation 'com.google.zxing:core:3.5.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.sunmi:printerlibrary:1.0.18'
