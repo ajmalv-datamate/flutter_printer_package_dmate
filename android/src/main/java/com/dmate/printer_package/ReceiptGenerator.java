@@ -17,6 +17,9 @@ public class ReceiptGenerator {
     public static int paperWidth = 576;
 
     public static String generateReceipt(PrinterData printerData) {
+        if (printerData.getRawText() != null && !printerData.getRawText().trim().isEmpty()) {
+            return printerData.getRawText();
+        }
         int W = 48;
         StringBuilder sb = new StringBuilder();
 
@@ -311,6 +314,9 @@ public class ReceiptGenerator {
     }
 
     public static Bitmap generateReceiptForPinelab(PrinterData printerData, Context context) {
+        if (printerData.getRawText() != null && !printerData.getRawText().trim().isEmpty()) {
+            return generateBitmapFromRawText(printerData.getRawText(), context);
+        }
         PaperType paperType = getPaperType(context);
         final int width = (paperType == PaperType.MM_80) ? 576 : 384;
         int workingHeight = (paperType == PaperType.MM_80) ? 4500 : 3800;
@@ -817,5 +823,34 @@ public class ReceiptGenerator {
         text = text.replaceAll("[^\\x00-\\x7F]", "");
         text = text.replace("\r\n", "\n");
         return text;
+    }
+
+    public static Bitmap generateBitmapFromRawText(String text, Context context) {
+        PaperType paperType = getPaperType(context);
+        final int width = (paperType == PaperType.MM_80) ? 576 : 384;
+        
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.BLACK);
+        paint.setTextSize((paperType == PaperType.MM_80) ? 22f : 16f);
+        paint.setTypeface(Typeface.MONOSPACE);
+        
+        String[] lines = text.split("\n");
+        Paint.FontMetrics fm = paint.getFontMetrics();
+        float lineHeight = fm.bottom - fm.top + 4;
+        
+        int height = (int) Math.ceil(lines.length * lineHeight + 40);
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawColor(Color.WHITE);
+        
+        float x = 20f;
+        float y = -fm.top + 10f;
+        
+        for (String line : lines) {
+            canvas.drawText(line, x, y, paint);
+            y += lineHeight;
+        }
+        
+        return bitmap;
     }
 }

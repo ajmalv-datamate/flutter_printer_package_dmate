@@ -356,6 +356,7 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
         if (map == null) return data;
 
         data.setClientname(getString(map, "clientname"));
+        data.setRawText(getString(map, "rawText"));
         data.setLocationName(getString(map, "locationName"));
         data.setLocationName1(getString(map, "locationName1"));
         data.setLocationName2(getString(map, "locationName2"));

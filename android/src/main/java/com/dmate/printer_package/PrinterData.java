@@ -38,6 +38,7 @@ public class PrinterData {
     private String compliAuth="";
     private String compliCompany="";
     private List<CartItem> cartItems;
+    private String rawText = "";
 
 
     public PrinterData(String clientname,
@@ -380,6 +381,14 @@ public class PrinterData {
 
     public void setCompliEmp(String compliEmp) {
         this.compliEmp = compliEmp;
+    }
+
+    public String getRawText() {
+        return rawText;
+    }
+
+    public void setRawText(String rawText) {
+        this.rawText = rawText;
     }
 
     public static class CartItem {
