@@ -403,6 +403,15 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
         data.setCompliAuth(getString(map, "compliAuth"));
         data.setCompliCompany(getString(map, "compliCompany"));
 
+        if (map.containsKey("showGSTSplitting")) {
+            Object val = map.get("showGSTSplitting");
+            if (val instanceof Boolean) {
+                data.setShowGSTSplitting((Boolean) val);
+            } else if (val != null) {
+                data.setShowGSTSplitting(Boolean.parseBoolean(String.valueOf(val)));
+            }
+        }
+
         List<Map<String, Object>> cartItemsList = (List<Map<String, Object>>) map.get("cartItems");
         List<PrinterData.CartItem> cartItems = new ArrayList<>();
         if (cartItemsList != null) {

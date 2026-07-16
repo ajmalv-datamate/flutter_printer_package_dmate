@@ -20,18 +20,51 @@ This plugin bridges the native Android SDKs for each manufacturer and offers for
 ### Native Dependency Resolution
 All required SDK binaries (`.jar` and `.aar` files) are packaged locally inside the plugin's android/libs folder. There are no absolute sibling dependencies, making it plug-and-play when imported into any project or compiled on different systems.
 
-### Permissions
-Ensure the following permissions are configured in your application's `AndroidManifest.xml`:
-```xml
-<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
-<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+### Permissions & Queries Configuration
 
-<queries>
-    <package android:name="com.pinelabs.masterapp" />
-</queries>
+For all printer features to function properly on modern Android versions (Android 11+ and Android 12+), merge the following permissions and `<queries>` block into your application's `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internet & Pax terminal printer permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="com.pax.permission.PRINTER" />
+
+    <!-- USB Printer permissions -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+    <uses-permission android:name="android.permission.USB_PERMISSION" />
+
+    <!-- Location permissions (Required for Bluetooth discovery/scanning) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Bluetooth permissions -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <!-- Android 12+ (API 31+) Bluetooth permissions -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+
+    <!-- Package Visibility Queries (Required for Android 11+ / API 30+) -->
+    <queries>
+        <!-- BPOS Nyx Printer Service -->
+        <package android:name="net.nyx.printerservice" />
+        <!-- PineLab MasterApp Service -->
+        <package android:name="com.pinelabs.masterapp" />
+        <!-- Neo/Incar printer services -->
+        <package android:name="com.incar.printerservice" />
+        <package android:name="com.neo.printer.sdk" />
+        <intent>
+            <action android:name="com.neo.printer.sdk.core.ApiAdapterManager.NeoPrinterService" />
+        </intent>
+    </queries>
+
+    <application ...>
+        <!-- For USB printers, you can optionally auto-grant permission when connected -->
+        <!-- by registering a USB device filter XML on your MainActivity. -->
+    </application>
+</manifest>
 ```
 
 ---

@@ -39,6 +39,7 @@ public class PrinterData {
     private String compliCompany="";
     private List<CartItem> cartItems;
     private String rawText = "";
+    private boolean showGSTSplitting = false;
 
 
     public PrinterData(String clientname,
@@ -389,6 +390,14 @@ public class PrinterData {
 
     public void setRawText(String rawText) {
         this.rawText = rawText;
+    }
+
+    public boolean isShowGSTSplitting() {
+        return showGSTSplitting;
+    }
+
+    public void setShowGSTSplitting(boolean showGSTSplitting) {
+        this.showGSTSplitting = showGSTSplitting;
     }
 
     public static class CartItem {
