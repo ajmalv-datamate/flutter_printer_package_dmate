@@ -169,9 +169,94 @@ To use this package in other projects with different package names:
 | `deviceModel` | Description | Connection Types Supported | Layout Target |
 |---|---|---|---|
 | **`TVS`** | TVS USB printer (ESC/POS Class 7) | `USB` | Raster Bitmap |
-| **`BPOS`** / **`BPOS_POS`** | BPOS mobile thermal printers | `USB`, `BLUETOOTH` | Formatted Text / Bitmap |
+| **`BPOS`** / **`BPOS_POS`** | BPOS mobile thermal printers (POSConnect/POSPrinter SDK) | `USB`, `BLUETOOTH` | Formatted Text / Bitmap |
+| **`BPOS_NYX`** | BPOS mobile devices using internal Nyx Printer Service | Internal Bind (AIDL) | Formatted Text |
 | **`POSIQ`** | PosIQ desktop thermal printers | `USB` | Formatted Text |
 | **`IMIN`** / **`IMIN_POS`** | IMin integrated POS hardware | `USB` (internal binding) | Formatted Text |
 | **`PINE_LAB`** | PineLab Smart Payment terminal | `USB` (service-bound) | Raster Bitmap |
 | **`TSUNMI`** / **`TSUNMI_EXTERNAL`** | Sunmi integrated POS hardware | `USB` (service-bound) | Raster Bitmap |
 | **`EPSON`** | Epson ePOS-Print desktop printers | `USB`, `BLUETOOTH` | Raster Bitmap |
+
+---
+
+## Native SDK Integration Guide in Flutter
+
+This package bridges native manufacturer printer SDKs to Dart using Flutter **Method Channels**.
+
+### How SDK Integration Works:
+
+1. **AAR/JAR Libraries (`android/libs`)**:
+   Add manufacturer library files (`.aar`, `.jar`) to the `android/libs` directory of the Flutter plugin/project.
+   Ensure they are imported in `android/build.gradle`:
+   ```groovy
+   dependencies {
+       implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+   }
+   ```
+
+2. **AIDL Interfaces (`android/src/main/aidl`)**:
+   For devices using system service binders (like Nyx printers), copy the `.aidl` files defining the service contract into the correct package hierarchy inside `src/main/aidl/`.
+   Enable AIDL compilation in `android/build.gradle`:
+   ```groovy
+   android {
+       buildFeatures {
+           aidl true
+       }
+   }
+   ```
+
+3. **Method Channel Bridge (`MethodChannel`)**:
+   - In Dart, invoke print requests with arguments:
+     ```dart
+     final bool? success = await _channel.invokeMethod('printReceipt', arguments);
+     ```
+   - In Java/Kotlin (e.g. `FlutterPrinterPackageDmatePlugin.java`), override `onMethodCall` to catch the method name, extract arguments, and route to the corresponding native device integration class:
+     ```java
+     @Override
+     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
+         if (call.method.equals("printReceipt")) {
+             // Extract arguments and call native SDK print methods
+         }
+     }
+     ```
+
+
+
+void triggerTestPrint() async {
+// 1. Prepare minimal test receipt data
+Map<String, dynamic> testData = {
+"clientname": "Test Cafe Hub",
+"locationName": "Billing Desk 1",
+"billNo": "Bill-0001",
+"date": "08/07/2026 12:00 PM",
+"total": "100.00",
+"sgst": "5.00",
+"cgst": "5.00",
+"totalPayable": "110.00",
+"amountInWords": "Rupees One Hundred and Ten Only",
+"paymentMode": "CASH",
+"cartItems": [
+{
+"itemName": "Standard Espresso",
+"quantity": "1",
+"price": "100.00",
+"total": "100.00"
+}
+]
+};
+// 2. Call print API
+bool success = await FlutterPrinterPackageDmate.printReceipt(
+deviceModel: "PINE_LAB",       // Choose printer model: TVS, BPOS, POSIQ, IMIN, PINE_LAB, TSUNMI, EPSON
+connectionType: "USB",     // Connection type: USB or BLUETOOTH
+printerData: testData,
+options: {
+"paperWidth": 576,
+// "pineLabAppId": "com.hotsoft.coffeeshop"
+// Width in pixels: 576 (80mm) or 384 (58mm)
+}
+// com.hotsoft.coffeeshopprod
+);
+print("Print operation finished with status: $success");
+}
+
+ElevatedButton(onPressed: (){triggerTestPrint();}, child: Text("Test Print")),

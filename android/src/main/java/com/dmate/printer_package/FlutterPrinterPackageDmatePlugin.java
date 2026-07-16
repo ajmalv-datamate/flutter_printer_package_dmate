@@ -140,6 +140,8 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
             printTVS(printerData, result);
         } else if (deviceModel.equalsIgnoreCase("BPOS") || deviceModel.equalsIgnoreCase("BPOS_POS")) {
             printBPOS(printerData, isUsb, result);
+        } else if (deviceModel.equalsIgnoreCase("BPOS_NYX")) {
+            printBPOSNyx(printerData, result);
         } else if (deviceModel.equalsIgnoreCase("POSIQ")) {
             printPOSIQ(printerData, result);
         } else if (deviceModel.equalsIgnoreCase("IMIN") || deviceModel.equalsIgnoreCase("IMIN_POS")) {
@@ -242,6 +244,16 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
     private void printBPOS(PrinterData printerData, boolean isUsb, Result result) {
         String receiptText = ReceiptGenerator.generateReceipt(printerData);
         new BPOSDeviceIntegrationText(activity, receiptText, printerData.getLocationName(), isUsb, new BPOSDeviceResponse() {
+            @Override
+            public void deviceResponse(boolean printCompleted) {
+                new Handler(Looper.getMainLooper()).post(() -> result.success(printCompleted));
+            }
+        }).bindService();
+    }
+
+    private void printBPOSNyx(PrinterData printerData, Result result) {
+        String receiptText = ReceiptGenerator.generateReceipt(printerData);
+        new BPOSNewDeviceIntegration(activity, receiptText, new BPOSDeviceResponse() {
             @Override
             public void deviceResponse(boolean printCompleted) {
                 new Handler(Looper.getMainLooper()).post(() -> result.success(printCompleted));

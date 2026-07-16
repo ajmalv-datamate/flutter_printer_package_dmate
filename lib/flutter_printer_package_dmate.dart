@@ -19,7 +19,7 @@ class FlutterPrinterPackageDmate {
 
   /// Prints a receipt using the specified printer model, connection details, and data.
   /// 
-  /// [deviceModel] should be one of: TVS, BPOS, POSIQ, IMIN, IMIN_POS, PINE_LAB, TSUNMI, EPSON.
+  /// [deviceModel] should be one of: TVS, BPOS, BPOS_NYX, POSIQ, IMIN, IMIN_POS, PINE_LAB, TSUNMI, EPSON.
   /// [connectionType] should be: USB, BLUETOOTH.
   /// [connectionPath] MAC Address for Bluetooth, target path or "USB:" for USB.
   /// [printerData] map matching the java class PrinterData.

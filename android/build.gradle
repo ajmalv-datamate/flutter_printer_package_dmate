@@ -36,6 +36,10 @@ android {
     defaultConfig {
         minSdkVersion 21
     }
+
+    buildFeatures {
+        aidl true
+    }
 }
 
 dependencies {

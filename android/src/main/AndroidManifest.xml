@@ -4,6 +4,7 @@
     <queries>
         <package android:name="com.incar.printerservice" />
         <package android:name="com.neo.printer.sdk" />
+        <package android:name="net.nyx.printerservice" />
         <intent>
             <action android:name="com.neo.printer.sdk.core.ApiAdapterManager.NeoPrinterService" />
         </intent>
