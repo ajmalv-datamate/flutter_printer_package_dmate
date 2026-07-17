@@ -438,7 +438,7 @@ public class ReceiptGenerator {
 
         Paint linePaint = new Paint();
         linePaint.setColor(Color.BLACK);
-        linePaint.setStrokeWidth(1f);
+        linePaint.setStrokeWidth(2f);
         linePaint.setAntiAlias(false);
 
         // ---------- MARGINS ----------
@@ -474,9 +474,9 @@ public class ReceiptGenerator {
         drawText(canvas, "FSSAI Lic No : " + printerData.getFssai(),
                 width / 2f, y += 25, TXT_SMALL, Paint.Align.CENTER, false);
 
-        y += 10;
+        y += 14;
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 25;
+        y += 30;
 
         // ---------- RECEIPT INFO (fixed-colon alignment) ----------
         // All labels left, colons at a fixed x, values just right of colon
@@ -500,10 +500,10 @@ public class ReceiptGenerator {
             canvas.drawText(row[1] != null ? row[1] : "", infoValueX, y, infoPaint);
             y += 28f;
         }
-        y += 4f;
+        y += 10f;
 
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 20;
+        y += 26;
 
         // ---------- ITEM TABLE HEADER ----------
         // Columns (left to right): No | Item | Qty | Rate | Amount
@@ -536,9 +536,9 @@ public class ReceiptGenerator {
         drawText(canvas, "Rate",   xRate + rateW,       y, TXT_SMALL, Paint.Align.RIGHT,  true);
         drawText(canvas, "Amount", xAmt  + amtW - 2f,  y, TXT_SMALL, Paint.Align.RIGHT,  true);
 
-        y += 18f;
+        y += 22f;
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 24f;
+        y += 28f;
 
         // ---------- ITEM ROWS ----------
         int sl = 1;
@@ -567,9 +567,9 @@ public class ReceiptGenerator {
         }
 
         // ---------- ITEM TOTAL ----------
-        y += 8f;
+        y += 14f;
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 22f;
+        y += 28f;
 
         float totLabelEndX = width - rightMargin - ((paperType == PaperType.MM_80) ? 145f : 100f);
         float totValueX    = width - rightMargin;
@@ -582,13 +582,13 @@ public class ReceiptGenerator {
         totPaint.setStrokeWidth(0.4f);
         canvas.drawText("ITEM TOTAL :", totLabelEndX, y, totPaint);
         canvas.drawText(printerData.getTotal() != null ? printerData.getTotal() : "0.00", totValueX, y, totPaint);
-        y += TXT_BODY + 12f;
+        y += TXT_BODY + 16f;
 
         // ---------- TAX SUMMARY ----------
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 5f;
+        y += 6f;
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 22f;
+        y += 28f;
 
         boolean isComplimentary = "complimentary".equalsIgnoreCase(printerData.getPaymentMode());
 
@@ -608,13 +608,13 @@ public class ReceiptGenerator {
 
             canvas.drawText("CGST :", totLabelEndX, y, taxPaint);
             canvas.drawText(printerData.getCgst() != null ? printerData.getCgst() : "0.00", totValueX, y, taxPaint);
-            y += TXT_BODY + 14f;
+            y += TXT_BODY + 18f;
 
             // Double line before Total Amount Payable (premium look)
             canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-            y += 5f;
+            y += 6f;
             canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-            y += 16f;
+            y += 26f;
 
             Paint payPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             payPaint.setTextSize(TXT_H2);
@@ -624,7 +624,7 @@ public class ReceiptGenerator {
             payPaint.setStrokeWidth(0.6f);
             canvas.drawText("Total Amount Payable :", totLabelEndX, y, payPaint);
             canvas.drawText(printerData.getTotalPayable() != null ? printerData.getTotalPayable() : "0.00", totValueX, y, payPaint);
-            y += TXT_H2 + 12f;
+            y += TXT_H2 + 18f;
         } else {
             try {
                 double totalAmt   = Double.parseDouble(printerData.getTotal());
@@ -633,12 +633,12 @@ public class ReceiptGenerator {
 
                 canvas.drawText("Round Off :", totLabelEndX, y, taxPaint);
                 canvas.drawText(String.format("%.2f", roundOff), totValueX, y, taxPaint);
-                y += TXT_BODY + 14f;
+                y += TXT_BODY + 18f;
 
                 canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-                y += 5f;
+                y += 6f;
                 canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-                y += 16f;
+                y += 26f;
 
                 Paint payPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
                 payPaint.setTextSize(TXT_H2);
@@ -666,15 +666,15 @@ public class ReceiptGenerator {
 
         // ---------- AMOUNT IN WORDS ----------
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 18f;
+        y += 24f;
         y += drawMultilineText(canvas, printerData.getAmountInWords(),
                 leftMargin, y, TXT_SMALL, Paint.Align.LEFT, false, (int) contentWidth);
-        y += 8f;
+        y += 12f;
 
         // ---------- GST SPLIT TABLE (non-complimentary only) ----------
         if (!isComplimentary && printerData.isShowGSTSplitting()) {
             canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-            y += 16f;
+            y += 22f;
 
             float colW = contentWidth / 6f;
             String[] hdr = {"SGST%", "SGST", "CGST%", "CGST", "CESS%", "CESS"};
@@ -700,7 +700,7 @@ public class ReceiptGenerator {
 
         // ---------- FOOTER ----------
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 18f;
+        y += 24f;
 
         Paint footPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         footPaint.setTextSize(TXT_ITEM);
@@ -754,9 +754,9 @@ public class ReceiptGenerator {
             y += TXT_ITEM + 8f;
         }
 
-        y += 4f;
+        y += 10f;
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
-        y += 22f;
+        y += 28f;
 
         // ---------- FINAL MESSAGES ----------
         drawText(canvas, "PARCEL ITEMS MUST BE USED WITHIN 2 HRS",

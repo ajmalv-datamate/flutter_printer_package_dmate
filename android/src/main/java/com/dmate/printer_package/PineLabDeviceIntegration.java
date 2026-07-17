@@ -83,7 +83,8 @@ public class PineLabDeviceIntegration {
                     JSONArray arryData = new JSONArray();
                     JSONObject values = new JSONObject();
                     values.put("PrintDataType", 2);
-                    values.put("PrinterWidth", 32);
+                    int printerWidthCols = (ReceiptGenerator.paperWidth >= 500) ? 48 : 32;
+                    values.put("PrinterWidth", printerWidthCols);
                     values.put("IsCenterAligned", false);
                     values.put("ImageData", compressBitmap(bitmap));
                     arryData.put(values);

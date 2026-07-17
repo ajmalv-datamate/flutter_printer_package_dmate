@@ -252,13 +252,22 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
     }
 
     private void printBPOSNyx(PrinterData printerData, Result result) {
-        String receiptText = ReceiptGenerator.generateReceipt(printerData);
-        new BPOSNewDeviceIntegration(activity, receiptText, new BPOSDeviceResponse() {
-            @Override
-            public void deviceResponse(boolean printCompleted) {
-                new Handler(Looper.getMainLooper()).post(() -> result.success(printCompleted));
-            }
-        }).bindService();
+        if (printerData.getRawText() != null && !printerData.getRawText().trim().isEmpty()) {
+            new BPOSNewDeviceIntegration(activity, printerData.getRawText(), new BPOSDeviceResponse() {
+                @Override
+                public void deviceResponse(boolean printCompleted) {
+                    new Handler(Looper.getMainLooper()).post(() -> result.success(printCompleted));
+                }
+            }).bindService();
+        } else {
+            Bitmap bitmap = ReceiptGenerator.generateReceiptForPinelab(printerData, context);
+            new BPOSNewDeviceIntegration(activity, bitmap, new BPOSDeviceResponse() {
+                @Override
+                public void deviceResponse(boolean printCompleted) {
+                    new Handler(Looper.getMainLooper()).post(() -> result.success(printCompleted));
+                }
+            }).bindService();
+        }
     }
 
     private void printPOSIQ(PrinterData printerData, Result result) {
