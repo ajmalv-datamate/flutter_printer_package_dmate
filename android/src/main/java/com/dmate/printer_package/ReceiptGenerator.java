@@ -22,7 +22,7 @@ public class ReceiptGenerator {
             return printerData.getRawText();
         }
 
-        int W = 48;
+        int W = (paperWidth >= 500) ? 48 : 32;
         StringBuilder sb = new StringBuilder();
 
         // HEADER
@@ -46,7 +46,11 @@ public class ReceiptGenerator {
         sb.append(line(W)).append("\n");
 
         // ITEM HEADER
-        sb.append("No  Item                 Qty   Rate     Amount").append("\n");
+        if (paperWidth >= 500) {
+            sb.append("No  Item                 Qty   Rate     Amount").append("\n");
+        } else {
+            sb.append("NoItem        Qty  Rate  Amount").append("\n");
+        }
         sb.append(line(W)).append("\n");
 
         int index = 1;
@@ -105,7 +109,7 @@ public class ReceiptGenerator {
         if (printerData.isShowGSTSplitting()) {
             sb.append(line(W)).append("\n");
             if (!printerData.getPaymentMode().equalsIgnoreCase("complimentary")) {
-                int colWidth = 8; // 48 / 6 columns
+                int colWidth = (paperWidth >= 500) ? 8 : 5; // 48 / 6 columns
                 String[] taxHeaders = {"SGST%", "SGST", "CGST%", "CGST", "CESS%", "CESS"};
 
                 // Header row
@@ -166,7 +170,7 @@ public class ReceiptGenerator {
                                                  String total,
                                                  boolean itemwise) {
 
-        int W = 48;
+        int W = (paperWidth >= 500) ? 48 : 32;
         StringBuilder sb = new StringBuilder();
 
         sb.append(center(outlet, W)).append("\n");
@@ -203,10 +207,14 @@ public class ReceiptGenerator {
     }
 
     static String row4(String c1, String c2, String c3, String c4) {
-        return padRight(c1, 20)
-                + padLeft(c2, 8)
-                + padLeft(c3, 10)
-                + padLeft(c4, 10);
+        int w1 = (paperWidth >= 500) ? 20 : 12;
+        int w2 = (paperWidth >= 500) ? 8 : 6;
+        int w3 = (paperWidth >= 500) ? 10 : 7;
+        int w4 = (paperWidth >= 500) ? 10 : 7;
+        return padRight(c1, w1)
+                + padLeft(c2, w2)
+                + padLeft(c3, w3)
+                + padLeft(c4, w4);
     }
 
     static String padRight(String text, int width) {
@@ -305,9 +313,9 @@ public class ReceiptGenerator {
     }
 
     static String rightAlignedKeyColonValue(String label, String value) {
-        int totalWidth = 45;
-        int labelWidth = 20;
-        int valueWidth = 8;
+        int totalWidth = (paperWidth >= 500) ? 45 : 31;
+        int labelWidth = (paperWidth >= 500) ? 20 : 12;
+        int valueWidth = (paperWidth >= 500) ? 8 : 6;
 
         String safeLabel = label.length() > labelWidth
                 ? label.substring(0, labelWidth)
@@ -331,11 +339,11 @@ public class ReceiptGenerator {
             String rate,
             String amount
     ) {
-        int noW = 3;
-        int nameW = 20;
-        int qtyW = 5;
-        int rateW = 8;
-        int amtW = 10;
+        int noW = (paperWidth >= 500) ? 3 : 2;
+        int nameW = (paperWidth >= 500) ? 20 : 12;
+        int qtyW = (paperWidth >= 500) ? 5 : 4;
+        int rateW = (paperWidth >= 500) ? 8 : 6;
+        int amtW = (paperWidth >= 500) ? 10 : 8;
 
         StringBuilder sb = new StringBuilder();
 
@@ -899,7 +907,7 @@ public class ReceiptGenerator {
     }
 
     public static String generateShiftCloseReceipt(ShiftClosePrintData p) {
-        final int W = 48;
+        final int W = (paperWidth >= 500) ? 48 : 32;
         StringBuilder sb = new StringBuilder();
 
         // HEADER

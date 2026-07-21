@@ -119,6 +119,13 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
         Map<String, Object> printerDataMap = call.argument("printerData");
         Map<String, Object> options = call.argument("options");
 
+        // Set default paper width based on device model
+        int defaultPaperWidth = 576; // Default to 80mm (576 px)
+        if (deviceModel != null && (deviceModel.equalsIgnoreCase("PINE_LAB") || deviceModel.equalsIgnoreCase("BPOS_NYX"))) {
+            defaultPaperWidth = 384; // Default to 58mm (384 px) for handhelds
+        }
+        ReceiptGenerator.paperWidth = defaultPaperWidth;
+
         if (options != null && options.containsKey("paperWidth")) {
             try {
                 ReceiptGenerator.paperWidth = ((Number) options.get("paperWidth")).intValue();
