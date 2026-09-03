@@ -208,7 +208,7 @@ To use this package in other projects with different package names:
 | **`IMIN`** / **`IMIN_POS`** | IMin integrated POS hardware | `USB` (internal binding) | Formatted Text |
 | **`PINE_LAB`** | PineLab Smart Payment terminal | `USB` (service-bound) | Raster Bitmap |
 | **`TSUNMI`** / **`TSUNMI_EXTERNAL`** | Sunmi integrated POS hardware | `USB` (service-bound) | Raster Bitmap |
-| **`EPSON`** | Epson ePOS-Print desktop printers | `USB`, `BLUETOOTH` | Raster Bitmap |
+| **`EPSON`** | Epson ePOS-Print desktop printers | `USB`, `BLUETOOTH`, `NETWORK` / `TCP` | Raster Bitmap |
 
 ---
 
@@ -278,16 +278,16 @@ Map<String, dynamic> testData = {
 ]
 };
 // 2. Call print API
+// Example: Printing to an Epson Network / Wi-Fi / Ethernet Printer
 bool success = await FlutterPrinterPackageDmate.printReceipt(
-deviceModel: "PINE_LAB",       // Choose printer model: TVS, BPOS, POSIQ, IMIN, PINE_LAB, TSUNMI, EPSON
-connectionType: "USB",     // Connection type: USB or BLUETOOTH
-printerData: testData,
-options: {
-"paperWidth": 576,
-// "pineLabAppId": "com.hotsoft.coffeeshop"
-// Width in pixels: 576 (80mm) or 384 (58mm)
-}
-// com.hotsoft.coffeeshopprod
+  deviceModel: "EPSON",
+  connectionType: "NETWORK", // or "TCP"
+  connectionPath: "192.168.1.100", // Automatically formatted to TCP:192.168.1.100
+  printerData: testData,
+  options: {
+    "paperWidth": 576,
+    "printerSeries": "TM_T82", // Optional: "TM_T88", "TM_T82", "TM_T20", "TM_M30" (Default: "TM_T88")
+  },
 );
 print("Print operation finished with status: $success");
 }

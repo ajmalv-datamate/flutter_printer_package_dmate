@@ -20,12 +20,13 @@ class FlutterPrinterPackageDmate {
   /// Prints a receipt using the specified printer model, connection details, and data.
   /// 
   /// [deviceModel] should be one of: TVS, BPOS, BPOS_NYX, POSIQ, IMIN, IMIN_POS, PINE_LAB, TSUNMI, EPSON.
-  /// [connectionType] should be: USB, BLUETOOTH.
-  /// [connectionPath] MAC Address for Bluetooth, target path or "USB:" for USB.
+  /// [connectionType] should be: USB, BLUETOOTH, NETWORK (or TCP).
+  /// [connectionPath] MAC Address for Bluetooth, IP address for Network/TCP (e.g. "192.168.1.100" or "TCP:192.168.1.100"), target path or "USB:" for USB.
   /// [printerData] map matching the java class PrinterData.
   /// [options] optional configuration map like:
   ///   `paperWidth` (int): 576 (for 80mm) or 384 (for 58mm)
   ///   `pineLabAppId` (String): Plutus smart App ID for PineLab.
+  ///   `printerSeries` (String): Epson printer series (e.g. "TM_T88", "TM_T82", "TM_T20", "TM_M30"). Default is "TM_T88".
   static Future<bool> printReceipt({
     required String deviceModel,
     required String connectionType,

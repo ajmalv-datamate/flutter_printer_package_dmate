@@ -25,7 +25,10 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
 import com.epson.epos2.printer.Printer;
+import com.epson.epos2.printer.PrinterStatusInfo;
+import com.epson.epos2.printer.ReceiveListener;
 import com.epson.epos2.Epos2Exception;
+import com.epson.epos2.Epos2CallbackCode;
 import com.sunmi.peripheral.printer.InnerPrinterCallback;
 import com.sunmi.peripheral.printer.InnerPrinterException;
 import com.sunmi.peripheral.printer.InnerPrinterManager;
@@ -158,7 +161,7 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
         } else if (deviceModel.equalsIgnoreCase("TSUNMI") || deviceModel.equalsIgnoreCase("TSUNMI_EXTERNAL") || deviceModel.equalsIgnoreCase("TSUNMI_TAB")) {
             printSunmi(printerData, result);
         } else if (deviceModel.equalsIgnoreCase("EPSON")) {
-            printEpson(printerData, connectionPath, result);
+            printEpson(printerData, connectionType, connectionPath, options, result);
         } else {
             result.error("UNSUPPORTED_MODEL", "Printer model " + deviceModel + " is not supported", null);
         }
@@ -352,31 +355,129 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
         }
     }
 
-    private void printEpson(PrinterData printerData, String target, Result result) {
+    private void printEpson(PrinterData printerData, String connectionType, String connectionPath, Map<String, Object> options, Result result) {
         Bitmap bitmap = ReceiptGenerator.generateReceiptForPinelab(printerData, context);
         new Thread(() -> {
             Printer printer = null;
             try {
-                printer = new Printer(Printer.TM_T88, Printer.MODEL_ANK, context);
-                printer.connect(target != null ? target : "USB:", Printer.PARAM_DEFAULT);
+                int series = Printer.TM_T88;
+                if (options != null && options.containsKey("printerSeries")) {
+                    String s = String.valueOf(options.get("printerSeries")).toUpperCase();
+                    if (s.contains("T82")) {
+                        series = Printer.TM_T82;
+                    } else if (s.contains("T20")) {
+                        series = Printer.TM_T20;
+                    } else if (s.contains("M30")) {
+                        series = Printer.TM_M30;
+                    } else if (s.contains("M10")) {
+                        series = Printer.TM_M10;
+                    } else if (s.contains("T70")) {
+                        series = Printer.TM_T70;
+                    } else if (s.contains("U220")) {
+                        series = Printer.TM_U220;
+                    } else if (s.contains("T88")) {
+                        series = Printer.TM_T88;
+                    }
+                }
+
+                String target = connectionPath;
+                if (target == null || target.trim().isEmpty()) {
+                    if ("NETWORK".equalsIgnoreCase(connectionType) || "TCP".equalsIgnoreCase(connectionType)) {
+                        new Handler(Looper.getMainLooper()).post(() -> result.error("INVALID_PATH", "connectionPath (IP address) is required for Network/TCP printing", null));
+                        return;
+                    }
+                    target = "USB:";
+                } else {
+                    target = target.trim();
+                    if ("NETWORK".equalsIgnoreCase(connectionType) || "TCP".equalsIgnoreCase(connectionType) || target.matches("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?$")) {
+                        if (!target.toUpperCase().startsWith("TCP:")) {
+                            target = "TCP:" + target;
+                        }
+                    } else if ("BLUETOOTH".equalsIgnoreCase(connectionType) || "BT".equalsIgnoreCase(connectionType)) {
+                        if (!target.toUpperCase().startsWith("BT:")) {
+                            target = "BT:" + target;
+                        }
+                    } else if ("USB".equalsIgnoreCase(connectionType)) {
+                        if (!target.toUpperCase().startsWith("USB")) {
+                            target = "USB:";
+                        }
+                    }
+                }
+
+                printer = new Printer(series, Printer.MODEL_ANK, context);
+
+                final boolean[] isCompleted = {false};
+
+                printer.setReceiveEventListener(new ReceiveListener() {
+                    @Override
+                    public void onPtrReceive(final Printer printerObj, final int code, final PrinterStatusInfo status, final String printJobId) {
+                        synchronized (isCompleted) {
+                            if (isCompleted[0]) return;
+                            isCompleted[0] = true;
+                        }
+                        new Thread(() -> {
+                            disconnectEpson(printerObj);
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                if (code == Epos2CallbackCode.CODE_SUCCESS) {
+                                    result.success(true);
+                                } else {
+                                    result.error("EPSON_ERROR", "Print failed with callback code: " + code, null);
+                                }
+                            });
+                        }).start();
+                    }
+                });
+
+                printer.connect(target, Printer.PARAM_DEFAULT);
+                printer.beginTransaction();
                 printer.addImage(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(),
                         Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT,
                         Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT);
                 printer.addCut(Printer.CUT_FEED);
                 printer.sendData(Printer.PARAM_DEFAULT);
-                printer.clearCommandBuffer();
-                printer.disconnect();
-                new Handler(Looper.getMainLooper()).post(() -> result.success(true));
+
+                // Fallback timeout in case callback doesn't fire within 15 seconds
+                final Printer finalPrinter = printer;
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    synchronized (isCompleted) {
+                        if (!isCompleted[0]) {
+                            isCompleted[0] = true;
+                            new Thread(() -> {
+                                disconnectEpson(finalPrinter);
+                                new Handler(Looper.getMainLooper()).post(() -> result.success(true));
+                            }).start();
+                        }
+                    }
+                }, 15000);
+
             } catch (Epos2Exception e) {
                 if (printer != null) {
-                    printer.clearCommandBuffer();
-                    try {
-                        printer.disconnect();
-                    } catch (Exception ex) {}
+                    disconnectEpson(printer);
                 }
                 new Handler(Looper.getMainLooper()).post(() -> result.error("EPSON_ERROR", "Epos error code: " + e.getErrorStatus(), null));
+            } catch (Exception e) {
+                if (printer != null) {
+                    disconnectEpson(printer);
+                }
+                new Handler(Looper.getMainLooper()).post(() -> result.error("EPSON_ERROR", e.getMessage(), null));
             }
         }).start();
+    }
+
+    private void disconnectEpson(Printer printer) {
+        if (printer == null) return;
+        try {
+            printer.endTransaction();
+        } catch (Exception ignored) {}
+        try {
+            printer.clearCommandBuffer();
+        } catch (Exception ignored) {}
+        try {
+            printer.setReceiveEventListener(null);
+        } catch (Exception ignored) {}
+        try {
+            printer.disconnect();
+        } catch (Exception ignored) {}
     }
 
     private PrinterData parsePrinterData(Map<String, Object> map) {
