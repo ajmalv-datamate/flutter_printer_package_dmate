@@ -71,36 +71,16 @@ class PrinterModelDropdown extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.auto_mode_rounded, size: 17, color: effectiveAccent),
+        Icon(Icons.auto_mode_rounded, size: 16, color: effectiveAccent),
         const SizedBox(width: 8),
-        Flexible(
-          fit: FlexFit.loose,
-          child: Text(
-            autoModelName != null && autoModelName!.isNotEmpty
-                ? "ERP Location Default ($autoModelName)"
-                : "ERP Location Default (Auto)",
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: effectiveAccent,
-              fontSize: 13.5,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: effectiveAccent.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            "AUTO",
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w800,
-              color: effectiveAccent,
-            ),
+        Text(
+          autoModelName != null && autoModelName!.isNotEmpty
+              ? "ERP Location Default ($autoModelName)"
+              : "ERP Location Default (Auto)",
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: effectiveAccent,
+            fontSize: 13.5,
           ),
         ),
       ],
@@ -113,20 +93,16 @@ class PrinterModelDropdown extends StatelessWidget {
       children: [
         Icon(model.icon, size: 16, color: model.accentColor),
         const SizedBox(width: 8),
-        Flexible(
-          fit: FlexFit.loose,
-          child: Text(
-            model.displayName,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
-              fontSize: 13.5,
-            ),
-            overflow: TextOverflow.ellipsis,
+        Text(
+          model.displayName,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            fontSize: 13.5,
           ),
         ),
         if (showPaperSizeBadges) ...[
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
             decoration: BoxDecoration(
@@ -214,14 +190,6 @@ class PrinterModelDropdown extends StatelessWidget {
       ),
       decoration: decoration ?? defaultDecoration,
       validator: validator,
-      selectedItemBuilder: (BuildContext context) {
-        return [
-          if (includeAutoOption) _buildAutoItem(effectiveAccent),
-          ...FlutterPrinterPackageDmate.supportedModels.map(
-            (PrinterModelInfo model) => _buildModelItem(model, isDark),
-          ),
-        ];
-      },
       items: [
         if (includeAutoOption)
           DropdownMenuItem<String>(

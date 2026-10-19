@@ -74,7 +74,7 @@ public class LandiPrinterIntegration {
                         }
                     }
                 });
-            } catch (NoClassDefFoundError | Exception e) {
+            } catch (Throwable e) {
                 Log.e(TAG, "Landi OmniDriver init error", e);
                 postFailure("Landi OmniDriver not supported on this device: " + e.getMessage());
             }
@@ -142,8 +142,8 @@ public class LandiPrinterIntegration {
                 try { printer.closeDevice(); } catch (Exception ignored) {}
             }
             postFailure("Landi PrinterException: " + pe.getMessage());
-        } catch (Exception e) {
-            Log.e(TAG, "Exception during Landi print", e);
+        } catch (Throwable e) {
+            Log.e(TAG, "Throwable during Landi print", e);
             if (printer != null) {
                 try { printer.closeDevice(); } catch (Exception ignored) {}
             }

@@ -457,11 +457,11 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
                     disconnectEpson(printer);
                 }
                 new Handler(Looper.getMainLooper()).post(() -> result.error("EPSON_ERROR", "Epos error code: " + e.getErrorStatus(), null));
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 if (printer != null) {
                     disconnectEpson(printer);
                 }
-                new Handler(Looper.getMainLooper()).post(() -> result.error("EPSON_ERROR", e.getMessage(), null));
+                new Handler(Looper.getMainLooper()).post(() -> result.error("EPSON_UNAVAILABLE", "Epson driver native library (libepos2.so) is not available on this device: " + t.getMessage(), null));
             }
         }).start();
     }
