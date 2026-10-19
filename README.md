@@ -1,295 +1,245 @@
 # flutter_printer_package_dmate
 
-A unified Flutter printer package that enables direct printing to various POS and external thermal printers (`TVS`, `BPOS`, `POSIQ`, `IMIN`, `PINE_LAB`, `TSUNMI`, `EPSON`) with a single method call.
+A unified Flutter thermal printer plugin for direct POS receipt printing across all major manufacturer SDKs (`LANDI`, `BPOS`, `BPOS_NYX`, `TVS`, `POSIQ`, `IMIN`, `PINE_LAB`, `SUNMI`, `EPSON`) with a single method call.
 
-This plugin bridges the native Android SDKs for each manufacturer and offers formatting helper utilities (both text-based and graphical bitmap formats).
-
----
-
-## Features
-
-- **Unified Printing**: Print receipts across multiple different device models using a single Dart API call.
-- **Dynamic Formatting**: Generates standard alignment layouts automatically.
-- **Peripheral Discovery**: Helper calls to query active USB and paired Bluetooth printers.
-- **Integrated SDK Support**: Works with standard manufacturer packages (Sewoo TVS, POSPrinter BPOS, PosIQ USB/Serial, Imin Service, Sunmi Aidl, Epson ePOS-Print, and PineLab MasterApp).
+Includes an **auto-defined, reusable dropdown UI widget** (`PrinterModelDropdown`) so any client application can drop in hardware selection without writing duplicate UI code.
 
 ---
 
-## Android Setup & Requirements
+## 🌟 What's New in this Update
 
-### Native Dependency Resolution
-All required SDK binaries (`.jar` and `.aar` files) are packaged locally inside the plugin's android/libs folder. There are no absolute sibling dependencies, making it plug-and-play when imported into any project or compiled on different systems.
+- **🚀 LANDI Printer SDK Integration**:
+  - Full native support for Landi Android POS terminals using the official **Landi OmniDriver SDK** (`xsuite-omnidriver-api-0.11.3.aar`).
+  - Automatic printer service binding, hardware status checks, high-resolution bitmap raster printing (384px / 58mm), and safe cutter fallbacks.
+- **🎨 Auto-Defined Reusable Dropdown (`PrinterModelDropdown`)**:
+  - Plug-and-play UI dropdown widget that lists all supported thermal printers with manufacturer icons, paper size badges (`58mm` / `80mm`), and dark mode styling.
+  - Optional support for ERP location default selection (`includeAutoOption: true`).
+- **🛡️ Enhanced Error Handling (`PrinterResult`)**:
+  - New `printReceiptDetailed(...)` method returning human-friendly messages, error codes (`DRIVER_NOT_FOUND`, `SERVICE_DISCONNECTED`, `DEVICE_ERROR`, `PRINT_FAILED`), and raw error details.
+- **📚 Centralized Model Catalog (`FlutterPrinterPackageDmate.supportedModels`)**:
+  - Standardized `PrinterModelInfo` model describing device type, default paper width, paper size labels, and brand accent colors.
+  - Helper functions: `normalizeModel()`, `isSupported()`, and `getModelInfo()`.
 
-### Permissions & Queries Configuration
+---
 
-For all printer features to function properly on modern Android versions (Android 11+ and Android 12+), merge the following permissions and `<queries>` block into your application's `android/app/src/main/AndroidManifest.xml`:
+## 🖨️ Supported Printer Hardware
+
+| Model ID | Hardware / Manufacturer | Form Factor | Paper Width | Native Integration |
+|---|---|---|---|---|
+| **`LANDI`** | Landi POS Terminal | Handheld | **58mm** (384px) | Landi OmniDriver SDK (`.aar`) |
+| **`BPOS`** | BPOS Thermal Printer | Desktop | **80mm** (576px) | POSPrinter SDK (`.jar`) / USB / Bluetooth |
+| **`BPOS_NYX`** | BPOS NYX POS Terminal | Handheld | **58mm** (384px) | Nyx Printer Service (AIDL) |
+| **`TVS`** | TVS Electronics Thermal Printer | Desktop | **80mm** (576px) | Sewoo POS SDK (`.aar`) |
+| **`POSIQ`** | PosIQ Thermal Printer | Desktop | **80mm** (576px) | PosIQ USB/Serial SDK |
+| **`IMIN`** | iMin POS Hardware | Desktop/Handheld | **80mm** (576px) | Imin Printer Service |
+| **`PINE_LAB`** | Pine Labs POS Terminal | Handheld | **58mm** (384px) | Pine Labs MasterApp Service |
+| **`SUNMI`** | Sunmi POS Terminal | Handheld | **58mm** (384px) | Sunmi Aidl Service |
+| **`EPSON`** | Epson ESC/POS Printer | Desktop | **80mm** (576px) | Epson ePOS-Print SDK |
+
+---
+
+## 📦 Installation
+
+Add `flutter_printer_package_dmate` to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  flutter_printer_package_dmate:
+    path: ../flutter_printer_package_dmate # or git url
+```
+
+---
+
+## ⚙️ Android Configuration & Permissions
+
+Ensure your app's `android/app/src/main/AndroidManifest.xml` includes the necessary permissions and `<queries>` tags for Android 11+ (API 30+):
 
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Internet & Pax terminal printer permissions -->
+    <!-- General Network and Printing Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="com.pax.permission.PRINTER" />
 
-    <!-- USB Printer permissions -->
+    <!-- USB Host & Permissions -->
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
     <uses-permission android:name="android.permission.USB_PERMISSION" />
 
-    <!-- Location permissions (Required for Bluetooth discovery/scanning) -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-    <!-- Bluetooth permissions -->
+    <!-- Bluetooth Permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-    <!-- Android 12+ (API 31+) Bluetooth permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <!-- Package Visibility Queries (Required for Android 11+ / API 30+) -->
+    <!-- Service Visibility Queries (Required for Android 11+) -->
     <queries>
         <!-- BPOS Nyx Printer Service -->
         <package android:name="net.nyx.printerservice" />
         <!-- PineLab MasterApp Service -->
         <package android:name="com.pinelabs.masterapp" />
-        <!-- Neo/Incar printer services -->
+        <!-- Neo / Incar / Landi Driver Services -->
         <package android:name="com.incar.printerservice" />
         <package android:name="com.neo.printer.sdk" />
+        <package android:name="com.landicorp.android.eptapi" />
         <intent>
             <action android:name="com.neo.printer.sdk.core.ApiAdapterManager.NeoPrinterService" />
         </intent>
     </queries>
-
-    <application ...>
-        <!-- For USB printers, you can optionally auto-grant permission when connected -->
-        <!-- by registering a USB device filter XML on your MainActivity. -->
-    </application>
 </manifest>
 ```
 
 ---
 
-## API & How to Call
+## 🚀 How to Use in Any Flutter Project
 
-### 1. Discover Connected Printers
-You can list active USB devices or paired Bluetooth devices:
+### 1. Reusable Printer Dropdown (`PrinterModelDropdown`)
+Instead of hardcoding printer lists and custom UI in your settings page, use `PrinterModelDropdown`:
 
 ```dart
+import 'package:flutter/material.dart';
 import 'package:flutter_printer_package_dmate/flutter_printer_package_dmate.dart';
 
-// List connected USB devices
-List<String> usbPrinters = await FlutterPrinterPackageDmate.getUSBDevices();
+class MyPrinterSettings extends StatefulWidget {
+  const MyPrinterSettings({super.key});
 
-// List paired Bluetooth devices
-List<Map<String, String>> bluetoothPrinters = await FlutterPrinterPackageDmate.getBluetoothDevices();
-for (var printer in bluetoothPrinters) {
-  print("Name: ${printer['name']}, Address: ${printer['address']}");
+  @override
+  State<MyPrinterSettings> createState() => _MyPrinterSettingsState();
+}
+
+class _MyPrinterSettingsState extends State<MyPrinterSettings> {
+  String _selectedModel = 'BPOS';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Printer Selection')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Dropdown automatically loads all supported hardware drivers
+            PrinterModelDropdown(
+              value: _selectedModel,
+              labelText: "Select Hardware Driver",
+              onChanged: (String? newModel) {
+                if (newModel != null) {
+                  setState(() => _selectedModel = newModel);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 ```
 
-### 2. Print Receipt
-Use the `printReceipt` function, passing the target model, connection type, path (e.g. bluetooth MAC address), and receipt data.
+#### Including ERP Location Default (AUTO) Option:
+```dart
+PrinterModelDropdown(
+  value: _selectedModel,
+  includeAutoOption: true,
+  autoModelName: "BPOS", // The backend ERP model name
+  onChanged: (val) => setState(() => _selectedModel = val!),
+)
+```
 
-You can print in **two different modes**:
-- **Structured Template Mode**: Pass key-value pairs (e.g., `"clientname"`, `"cartItems"`) and the package will layout the receipt automatically.
-- **Raw Text Mode (Recommended for Existing App Migrations)**: Pass `"rawText"` containing your pre-formatted receipt string. The package will bypass template generation and print your monospaced text exactly as is. On bitmap-based printers (PineLab, Sunmi, Epson, TVS), the package will auto-render the raw text into a high-quality monospaced bitmap before printing.
+---
+
+### 2. Single-Call Printing with Detailed Error Handling
+
+Use `printReceiptDetailed` to get clear, human-readable error messages and error codes:
 
 ```dart
+import 'dart:typed_data';
 import 'package:flutter_printer_package_dmate/flutter_printer_package_dmate.dart';
 
-void startPrintingJob() async {
-  // Option A: Raw Text Mode (Prints pre-formatted strings directly)
-  Map<String, dynamic> rawReceiptData = {
-    "rawText": """
-    ================================
-             CORNER CAFE
-             Ground Floor
-    ================================
-    Bill No: Bill-9988
-    Date:    08/07/2026 11:45 AM
-    --------------------------------
-    Cafe Latte         2x     200.00
-    Butter Croissant   1x      80.00
-    --------------------------------
-    Total Payable:            280.00
-    ================================
-    """
-  };
-
-  // Option B: Structured Template Mode (Auto-formatted by plugin layout engine)
-  Map<String, dynamic> structuredReceiptData = {
-    "clientname": "Corner Cafe",
-    "locationName": "Ground Floor",
-    "locationName1": "Sector-3, Bypass Road",
-    "locationName2": "Kochi, Kerala",
-    "billNo": "Bill-9988",
-    "date": "08/07/2026 11:45 AM",
-    "total": "280.00",
-    "sgst": "14.00",
-    "cgst": "14.00",
-    "totalPayable": "308.00",
-    "amountInWords": "Rupees Three Hundred and Eight Only",
-    "paymentMode": "CASH",
-    "outlet": "Kochi Bypass Hub",
-    "gstIN": "32ABCDE1234F1Z0",
-    "fssai": "12345678901234",
-    "table": "T-12",
-    "waiter": "Alex",
-    "remarks": "Extra Hot",
-    "kot": "KOT-342",
-    "cartItems": [
-      {
-        "itemName": "Cafe Latte",
-        "quantity": "2",
-        "price": "100.00",
-        "total": "200.00"
-      },
-      {
-        "itemName": "Butter Croissant",
-        "quantity": "1",
-        "price": "80.00",
-        "total": "80.00"
-      }
-    ]
-  };
-
-  // Trigger the print job (using Raw Text Mode as an example)
-  bool isSuccess = await FlutterPrinterPackageDmate.printReceipt(
-    deviceModel: "BPOS",       // Choose from: TVS, BPOS, POSIQ, IMIN, PINE_LAB, TSUNMI, EPSON
-    connectionType: "USB",     // "USB" or "BLUETOOTH"
-    connectionPath: "",        // Optional MAC address or USB device target
-    printerData: rawReceiptData,
-    options: {
-      "paperWidth": 576,       // 576 pixels (for 80mm paper) or 384 pixels (for 58mm paper)
-      "pineLabAppId": "your_plutus_app_id_here" // Optional. If left blank, uses coffeeshop defaults.
-    }
+Future<void> printBill(Uint8List imageBytes, String chosenModel) async {
+  final PrinterResult result = await FlutterPrinterPackageDmate.printReceiptDetailed(
+    model: chosenModel,          // 'LANDI', 'BPOS', 'SUNMI', etc.
+    bytes: imageBytes,           // Pre-rendered receipt image bytes (PNG)
   );
 
-  if (isSuccess) {
+  if (result.isSuccess) {
     print("Receipt printed successfully!");
   } else {
-    print("Print operation failed.");
+    // Show friendly error message to the user:
+    print("Error: ${result.message}");
+    print("Error Code: ${result.errorCode}"); // e.g. 'DRIVER_NOT_FOUND', 'PRINT_FAILED'
   }
 }
 ```
 
 ---
 
-## 3. PineLab App ID & Security Registration
+### 3. Quick Printing with Raw Text or Template Data
 
-PineLab terminal services strictly validate the identity of the calling application. For prints to go through, the calling application's **Package Name** and its **Keystore Signature SHA-256 fingerprint** must be registered on the PineLab Developer Console.
+If you have structured JSON receipt data or raw monospaced text, use `printReceipt`:
 
-### Coffeeshop Default Fallbacks
-If no `"pineLabAppId"` is provided in the `options` parameter, the plugin automatically detects your app's package name and falls back to these default coffeeshop keys:
-- **Package Name**: `com.hotsoft.coffeeshop` (Dev) -> **App ID**: `386e4aa24d324023b77efe76f607f0bb`
-- **Package Name**: `com.hotsoft.coffeeshopprod` (Prod) -> **App ID**: `ca64099cf0a74e68af6aa4c9159283e5`
+```dart
+import 'package:flutter_printer_package_dmate/flutter_printer_package_dmate.dart';
 
-### Using in Other Applications
-To use this package in other projects with different package names:
-1. Register your new package name (e.g. `com.example.myapp`) with PineLab.
-2. Obtain your custom **Application ID** from the PineLab portal.
-3. Pass your custom ID dynamically in the print call:
-   ```dart
-   options: {
-     "pineLabAppId": "your-new-custom-id-from-pinelab"
-   }
-   ```
-
----
-
-## Supported Models Parameter Reference
-
-| `deviceModel` | Description | Connection Types Supported | Layout Target |
-|---|---|---|---|
-| **`TVS`** | TVS USB printer (ESC/POS Class 7) | `USB` | Raster Bitmap |
-| **`BPOS`** / **`BPOS_POS`** | BPOS mobile thermal printers (POSConnect/POSPrinter SDK) | `USB`, `BLUETOOTH` | Formatted Text / Bitmap |
-| **`BPOS_NYX`** | BPOS mobile devices using internal Nyx Printer Service | Internal Bind (AIDL) | Formatted Text |
-| **`POSIQ`** | PosIQ desktop thermal printers | `USB` | Formatted Text |
-| **`IMIN`** / **`IMIN_POS`** | IMin integrated POS hardware | `USB` (internal binding) | Formatted Text |
-| **`PINE_LAB`** | PineLab Smart Payment terminal | `USB` (service-bound) | Raster Bitmap |
-| **`TSUNMI`** / **`TSUNMI_EXTERNAL`** | Sunmi integrated POS hardware | `USB` (service-bound) | Raster Bitmap |
-| **`EPSON`** | Epson ePOS-Print desktop printers | `USB`, `BLUETOOTH`, `NETWORK` / `TCP` | Raster Bitmap |
-
----
-
-## Native SDK Integration Guide in Flutter
-
-This package bridges native manufacturer printer SDKs to Dart using Flutter **Method Channels**.
-
-### How SDK Integration Works:
-
-1. **AAR/JAR Libraries (`android/libs`)**:
-   Add manufacturer library files (`.aar`, `.jar`) to the `android/libs` directory of the Flutter plugin/project.
-   Ensure they are imported in `android/build.gradle`:
-   ```groovy
-   dependencies {
-       implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
-   }
-   ```
-
-2. **AIDL Interfaces (`android/src/main/aidl`)**:
-   For devices using system service binders (like Nyx printers), copy the `.aidl` files defining the service contract into the correct package hierarchy inside `src/main/aidl/`.
-   Enable AIDL compilation in `android/build.gradle`:
-   ```groovy
-   android {
-       buildFeatures {
-           aidl true
-       }
-   }
-   ```
-
-3. **Method Channel Bridge (`MethodChannel`)**:
-   - In Dart, invoke print requests with arguments:
-     ```dart
-     final bool? success = await _channel.invokeMethod('printReceipt', arguments);
-     ```
-   - In Java/Kotlin (e.g. `FlutterPrinterPackageDmatePlugin.java`), override `onMethodCall` to catch the method name, extract arguments, and route to the corresponding native device integration class:
-     ```java
-     @Override
-     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-         if (call.method.equals("printReceipt")) {
-             // Extract arguments and call native SDK print methods
-         }
-     }
-     ```
-
-
-
-void triggerTestPrint() async {
-// 1. Prepare minimal test receipt data
-Map<String, dynamic> testData = {
-"clientname": "Test Cafe Hub",
-"locationName": "Billing Desk 1",
-"billNo": "Bill-0001",
-"date": "08/07/2026 12:00 PM",
-"total": "100.00",
-"sgst": "5.00",
-"cgst": "5.00",
-"totalPayable": "110.00",
-"amountInWords": "Rupees One Hundred and Ten Only",
-"paymentMode": "CASH",
-"cartItems": [
-{
-"itemName": "Standard Espresso",
-"quantity": "1",
-"price": "100.00",
-"total": "100.00"
-}
-]
-};
-// 2. Call print API
-// Example: Printing to an Epson Network / Wi-Fi / Ethernet Printer
 bool success = await FlutterPrinterPackageDmate.printReceipt(
-  deviceModel: "EPSON",
-  connectionType: "NETWORK", // or "TCP"
-  connectionPath: "192.168.1.100", // Automatically formatted to TCP:192.168.1.100
-  printerData: testData,
+  deviceModel: "LANDI", // or "BPOS", "SUNMI", "IMIN", etc.
+  connectionType: "USB",
+  printerData: {
+    "rawText": """
+    ================================
+              CAFE DEMO
+    ================================
+    Item               Qty    Price
+    Cappuccino          1     120.00
+    Croissant           2     160.00
+    --------------------------------
+    Total:                    280.00
+    ================================
+    """
+  },
   options: {
-    "paperWidth": 576,
-    "printerSeries": "TM_T82", // Optional: "TM_T88", "TM_T82", "TM_T20", "TM_M30" (Default: "TM_T88")
+    "paperWidth": 384, // 384 for 58mm, 576 for 80mm
   },
 );
-print("Print operation finished with status: $success");
-}
+```
 
-ElevatedButton(onPressed: (){triggerTestPrint();}, child: Text("Test Print")),
+---
+
+### 4. Hardware Model Inspection & Helpers
+
+```dart
+// 1. Get the list of all supported model IDs:
+List<String> models = FlutterPrinterPackageDmate.modelIds;
+// ['LANDI', 'BPOS', 'BPOS_NYX', 'TVS', 'POSIQ', 'IMIN', 'PINE_LAB', 'SUNMI', 'EPSON']
+
+// 2. Normalize user or server strings (handles aliases like "LANDI_POS", "TSUNMI"):
+String normalized = FlutterPrinterPackageDmate.normalizeModel("LANDI_POS"); // Returns "LANDI"
+
+// 3. Check if a model is supported:
+bool supported = FlutterPrinterPackageDmate.isSupported("LANDI"); // true
+
+// 4. Inspect model metadata:
+PrinterModelInfo? info = FlutterPrinterPackageDmate.getModelInfo("LANDI");
+print("Name: ${info?.displayName}");       // "Landi POS"
+print("Paper: ${info?.paperSizeLabel}");    // "58mm"
+print("Width: ${info?.defaultPaperWidth}"); // 384
+```
+
+---
+
+## 🛠️ Error Codes Reference
+
+When calling `printReceiptDetailed`, `result.errorCode` can be one of:
+
+| Error Code | Meaning | Recommended Action |
+|---|---|---|
+| `EMPTY_IMAGE` | Receipt image bytes were empty or null. | Verify receipt rendering pipeline. |
+| `UNSUPPORTED_MODEL` | Device model string is not recognized. | Use `FlutterPrinterPackageDmate.normalizeModel()`. |
+| `DRIVER_NOT_FOUND` | Hardware driver service is missing or not installed on Android. | Install the manufacturer driver app/service. |
+| `SERVICE_DISCONNECTED` | POS system service disconnected unexpectedly. | Restart POS terminal printer service. |
+| `DEVICE_ERROR` | Hardware issue reported (e.g., out of paper, cover open, overheating). | Check thermal paper roll and close printer cover. |
+| `PRINT_FAILED` | General print error from driver SDK. | Inspect `result.rawDetails` for native stack trace. |
+
+---
+
+## 📄 License
+MIT License.

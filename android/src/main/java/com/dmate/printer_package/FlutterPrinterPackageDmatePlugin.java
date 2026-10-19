@@ -124,7 +124,7 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
 
         // Set default paper width based on device model
         int defaultPaperWidth = 576; // Default to 80mm (576 px)
-        if (deviceModel != null && (deviceModel.equalsIgnoreCase("PINE_LAB") || deviceModel.equalsIgnoreCase("BPOS_NYX"))) {
+        if (deviceModel != null && (deviceModel.equalsIgnoreCase("PINE_LAB") || deviceModel.equalsIgnoreCase("BPOS_NYX") || deviceModel.equalsIgnoreCase("LANDI") || deviceModel.equalsIgnoreCase("LANDI_POS"))) {
             defaultPaperWidth = 384; // Default to 58mm (384 px) for handhelds
         }
         ReceiptGenerator.paperWidth = defaultPaperWidth;
@@ -158,8 +158,10 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
             printImin(printerData, result);
         } else if (deviceModel.equalsIgnoreCase("PINE_LAB")) {
             printPineLab(printerData, options, result);
-        } else if (deviceModel.equalsIgnoreCase("TSUNMI") || deviceModel.equalsIgnoreCase("TSUNMI_EXTERNAL") || deviceModel.equalsIgnoreCase("TSUNMI_TAB")) {
+        } else if (deviceModel.equalsIgnoreCase("TSUNMI") || deviceModel.equalsIgnoreCase("TSUNMI_EXTERNAL") || deviceModel.equalsIgnoreCase("TSUNMI_TAB") || deviceModel.equalsIgnoreCase("SUNMI")) {
             printSunmi(printerData, result);
+                } else if (deviceModel.equalsIgnoreCase("LANDI") || deviceModel.equalsIgnoreCase("LANDI_POS")) {
+            printLandi(printerData, options, result);
         } else if (deviceModel.equalsIgnoreCase("EPSON")) {
             printEpson(printerData, connectionType, connectionPath, options, result);
         } else {
@@ -480,6 +482,28 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
         } catch (Exception ignored) {}
     }
 
+    private void printLandi(PrinterData printerData, Map<String, Object> options, Result result) {
+        Bitmap bitmap = ReceiptGenerator.generateReceiptForPinelab(printerData, context != null ? context : activity);
+        int paperWidth = ReceiptGenerator.paperWidth;
+        if (options != null && options.containsKey("paperWidth")) {
+            try {
+                paperWidth = ((Number) options.get("paperWidth")).intValue();
+            } catch (Exception ignored) {}
+        }
+
+        new LandiPrinterIntegration(context != null ? context : activity, bitmap, paperWidth, new LandiPrinterIntegration.LandiPrintCallback() {
+            @Override
+            public void onSuccess() {
+                result.success(true);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                result.error("LANDI_PRINT_ERROR", errorMessage, null);
+            }
+        }).print();
+    }
+
     private PrinterData parsePrinterData(Map<String, Object> map) {
         PrinterData data = new PrinterData();
         if (map == null) return data;
@@ -576,3 +600,4 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
         activity = null;
     }
 }
+
