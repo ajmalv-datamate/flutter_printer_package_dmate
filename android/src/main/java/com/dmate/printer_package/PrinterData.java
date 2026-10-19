@@ -40,6 +40,24 @@ public class PrinterData {
     private List<CartItem> cartItems;
     private String rawText = "";
     private boolean showGSTSplitting = false;
+    private int paperWidth = 0;
+    private String paperSize = "";
+
+    public int getPaperWidth() {
+        return paperWidth;
+    }
+
+    public void setPaperWidth(int paperWidth) {
+        this.paperWidth = paperWidth;
+    }
+
+    public String getPaperSize() {
+        return paperSize;
+    }
+
+    public void setPaperSize(String paperSize) {
+        this.paperSize = paperSize;
+    }
 
 
     public PrinterData(String clientname,

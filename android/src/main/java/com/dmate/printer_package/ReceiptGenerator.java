@@ -388,7 +388,18 @@ public class ReceiptGenerator {
         MM_80
     }
 
-    private static PaperType getPaperType(Context context) {
+    private static PaperType getPaperType(Context context, PrinterData printerData) {
+        if (printerData != null) {
+            if (printerData.getPaperWidth() > 0) {
+                return printerData.getPaperWidth() >= 500 ? PaperType.MM_80 : PaperType.MM_58;
+            }
+            if ("58mm".equalsIgnoreCase(printerData.getPaperSize())) {
+                return PaperType.MM_58;
+            }
+            if ("80mm".equalsIgnoreCase(printerData.getPaperSize())) {
+                return PaperType.MM_80;
+            }
+        }
         return paperWidth >= 500 ? PaperType.MM_80 : PaperType.MM_58;
     }
 
@@ -425,7 +436,7 @@ public class ReceiptGenerator {
         }
 
         // ---------- PAPER TYPE ----------
-        PaperType paperType = getPaperType(context);
+        PaperType paperType = getPaperType(context, printerData);
 
         final int width = (paperType == PaperType.MM_80) ? 576 : 384;
         final float SCALE = 1.0f;
@@ -519,15 +530,15 @@ public class ReceiptGenerator {
 
         if (paperType == PaperType.MM_80) {
             slW   = contentWidth * 0.08f;
-            itemW = contentWidth * 0.42f;
+            itemW = contentWidth * 0.44f;
             qtyW  = contentWidth * 0.10f;
             rateW = contentWidth * 0.18f;
-            amtW  = contentWidth * 0.22f;
+            amtW  = contentWidth * 0.20f;
         } else {
-            slW   = contentWidth * 0.10f;
-            itemW = contentWidth * 0.40f;
+            slW   = contentWidth * 0.08f;
+            itemW = contentWidth * 0.44f;
             qtyW  = contentWidth * 0.12f;
-            rateW = contentWidth * 0.20f;
+            rateW = contentWidth * 0.18f;
             amtW  = contentWidth * 0.18f;
         }
 
@@ -538,11 +549,15 @@ public class ReceiptGenerator {
         float xRate = xQty  + qtyW;
         float xAmt  = xRate + rateW;
 
-        drawText(canvas, "No",     xSl   + slW / 2f,   y, TXT_SMALL, Paint.Align.CENTER, true);
-        drawText(canvas, "Item",   xItem + 2f,          y, TXT_SMALL, Paint.Align.LEFT,   true);
-        drawText(canvas, "Qty",    xQty  + qtyW,        y, TXT_SMALL, Paint.Align.RIGHT,  true);
-        drawText(canvas, "Rate",   xRate + rateW,       y, TXT_SMALL, Paint.Align.RIGHT,  true);
-        drawText(canvas, "Amount", xAmt  + amtW - 2f,  y, TXT_SMALL, Paint.Align.RIGHT,  true);
+        float ratePadding = (paperType == PaperType.MM_80) ? 10f : 8f;
+        float amtPadding  = 2f;
+        String amtHeader  = (paperType == PaperType.MM_80) ? "Amount" : "Amt";
+
+        drawText(canvas, "No",      xSl   + slW / 2f,            y, TXT_SMALL, Paint.Align.CENTER, true);
+        drawText(canvas, "Item",    xItem + 2f,                  y, TXT_SMALL, Paint.Align.LEFT,   true);
+        drawText(canvas, "Qty",     xQty  + qtyW,                y, TXT_SMALL, Paint.Align.RIGHT,  true);
+        drawText(canvas, "Rate",    xRate + rateW - ratePadding, y, TXT_SMALL, Paint.Align.RIGHT,  true);
+        drawText(canvas, amtHeader, xAmt  + amtW - amtPadding,   y, TXT_SMALL, Paint.Align.RIGHT,  true);
 
         y += 22f;
         canvas.drawLine(leftMargin, y, width - rightMargin, y, linePaint);
@@ -567,9 +582,9 @@ public class ReceiptGenerator {
             float rowH = drawMultilineText(canvas, item.getItemName(),
                     xItem + 2f, y, TXT_ITEM, Paint.Align.LEFT, false, itemTextWidthPx);
 
-            drawText(canvas, qtyStr,  xQty  + qtyW,       y, TXT_ITEM, Paint.Align.RIGHT, false);
-            drawText(canvas, rateStr, xRate + rateW,       y, TXT_ITEM, Paint.Align.RIGHT, false);
-            drawText(canvas, amtStr,  xAmt  + amtW - 2f,  y, TXT_ITEM, Paint.Align.RIGHT, false);
+            drawText(canvas, qtyStr,  xQty  + qtyW,                y, TXT_ITEM, Paint.Align.RIGHT, false);
+            drawText(canvas, rateStr, xRate + rateW - ratePadding, y, TXT_ITEM, Paint.Align.RIGHT, false);
+            drawText(canvas, amtStr,  xAmt  + amtW - amtPadding,   y, TXT_ITEM, Paint.Align.RIGHT, false);
 
             y += Math.max(rowH, TXT_ITEM + 10f);
         }
