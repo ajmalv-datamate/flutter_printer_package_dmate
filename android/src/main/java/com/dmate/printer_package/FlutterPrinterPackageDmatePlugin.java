@@ -135,6 +135,10 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
             } catch (Exception e) {
                 // ignore
             }
+        } else if (printerDataMap != null && printerDataMap.containsKey("paperWidth")) {
+            try {
+                ReceiptGenerator.paperWidth = ((Number) printerDataMap.get("paperWidth")).intValue();
+            } catch (Exception ignored) {}
         }
 
         PrinterData printerData = parsePrinterData(printerDataMap);
@@ -563,6 +567,17 @@ public class FlutterPrinterPackageDmatePlugin implements FlutterPlugin, MethodCa
                 item.setPrice(getString(itemMap, "price"));
                 item.setTotal(getString(itemMap, "total"));
                 cartItems.add(item);
+            }
+        }
+                data.setPaperSize(getString(map, "paperSize"));
+        if (map.containsKey("paperWidth")) {
+            Object val = map.get("paperWidth");
+            if (val instanceof Number) {
+                data.setPaperWidth(((Number) val).intValue());
+            } else if (val != null) {
+                try {
+                    data.setPaperWidth(Integer.parseInt(String.valueOf(val)));
+                } catch (Exception ignored) {}
             }
         }
         data.setCartItems(cartItems);
