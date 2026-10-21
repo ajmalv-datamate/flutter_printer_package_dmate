@@ -388,6 +388,10 @@ public class ReceiptGenerator {
         MM_80
     }
 
+    private static PaperType getPaperType(Context context) {
+        return getPaperType(context, null);
+    }
+
     private static PaperType getPaperType(Context context, PrinterData printerData) {
         if (printerData != null) {
             if (printerData.getPaperWidth() > 0) {
